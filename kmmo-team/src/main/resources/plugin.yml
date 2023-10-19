@@ -1,0 +1,11 @@
+name: KMMORaid
+version: "${version}"
+main: "dev.krysztal.kmmo.raid.KMMORaidMain"
+description: "Krysztal's MMORPG RAID plugin."
+softdepend: [ PlaceholderAPI ]
+depend:
+  - KMMOCore
+author: |
+  Krysztal112233<suibing112233@outlook.com>
+website: "https://github.com/Krysztal112233/KMMO"
+api-version: '1.19'

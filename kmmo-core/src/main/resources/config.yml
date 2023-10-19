@@ -1,0 +1,29 @@
+# +----------------------------------------------------------------------------------------------+ #
+# |                                                                                              | #
+# |                                    PERSISTENCE SETTINGS                                      | #
+# |                                                                                              | #
+# |                           Control how KMMOCore to persistence data                           | #
+# |                                                                                              | #
+# +----------------------------------------------------------------------------------------------+ #
+
+# - How to choose your type?
+#
+# |   Make a suitable choice, this option is not easy to migrate later.
+# | => I recommend Redis when your server is a clustered server. (Running on Velocity)
+# | => Using InMemory isn't a good choice, but it works - it's just going to be very clunky!
+persistence:
+  # - Possible options:
+  #
+  # |   For single instance
+  # | => InMemory (Rollback option)
+  #
+  # |   For best performance or running on Velocity
+  # | => Redis (Recommend)
+  type: InMemory
+  configuration:
+    redis:
+      endpoint: "127.0.0.1:6379"
+    memory:
+      file: "storage.json"
+  cache:
+    command: ""

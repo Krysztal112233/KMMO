@@ -1,0 +1,16 @@
+name: KMMOCore
+version: "${version}"
+main: "dev.krysztal.kmmo.core.KMMOCoreMain"
+description: "Krysztal's MMORPG core"
+depend: [ PlaceholderAPI ]
+author: |
+  Krysztal112233<suibing112233@outlook.com>
+website: "https://papermc.io"
+api-version: '1.19'
+
+libraries:
+  - "com.h2database:h2:${h2}"
+  - "io.github.crackthecodeabhi:kreds:${kreds}"
+  - "com.esotericsoftware:kryo:${kryo}"
+  - "org.apache.groovy:groovy:${groovy}"
+  - "com.google.guava:guava:${guava}"

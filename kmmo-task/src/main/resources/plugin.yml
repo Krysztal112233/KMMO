@@ -1,0 +1,12 @@
+name: KMMOTask
+version: "${version}"
+main: "dev.krysztal.kmmo.task.KMMOTaskMain"
+description: "Krysztal's MMORPG task"
+depend: [ PlaceholderAPI ]
+author: |
+  Krysztal112233<suibing112233@outlook.com>
+website: "https://papermc.io"
+api-version: '1.19'
+
+libraries:
+  - "org.apache.groovy:groovy:${groovy}"
