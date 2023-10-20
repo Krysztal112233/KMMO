@@ -14,3 +14,4 @@ libraries:
   - "com.esotericsoftware:kryo:${kryo}"
   - "org.apache.groovy:groovy:${groovy}"
   - "com.google.guava:guava:${guava}"
+  - "com.github.ben-manes.caffeine:caffeine:${caffeine}"

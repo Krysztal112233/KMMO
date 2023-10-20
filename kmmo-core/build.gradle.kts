@@ -29,6 +29,7 @@ val kreds: String by project
 val kryo: String by project
 val groovy: String by project
 val guava: String by project
+val caffeine: String by project
 
 version = kmmo_core
 
@@ -58,6 +59,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.guava/guava
     compileOnly("com.google.guava:guava:${guava}")
+
+    // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
+    implementation("com.github.ben-manes.caffeine:caffeine:${caffeine}")
 
     // https://mvnrepository.com/artifact/org.apache.groovy/groovy
     compileOnly("org.apache.groovy:groovy:${groovy}")

@@ -22,19 +22,47 @@
 
 package dev.krysztal.kmmo.core.foundation
 
-import com.google.common.cache.Cache
-import com.google.common.cache.CacheBuilder
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.RemovalCause
+import com.github.benmanes.caffeine.cache.stats.CacheStats
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-class KSimpleCache<K, V>(command: String = "") {
-    val cache: Cache<K, V>
+class KSimpleCache<K, V> private constructor(builder: Builder<K, V>)
+        where K : Any,
+              V : Any {
 
-    init {
-        this.cache = CacheBuilder
-            .from(command)
-            .removalListener { this.onExpire(it.key as K, it.value as V) }
-            .build()
+    private val logger: Logger = builder.logger
+    private val cache: Cache<K, V> = Caffeine
+        .from(builder.spec)
+        .removalListener<K, V> { k, v, c -> builder.expire(k, v, c) }
+        .build()
+
+    fun put(k: K, v: V) {
+        this.cache.put(k, v)
+        this.logStats()
     }
 
+    fun get(k: K): V? {
+        val v = this.cache.getIfPresent(k)
+        this.logStats()
+        return v
+    }
 
-    fun onExpire(k: K, v: V) {}
+    private fun stats(): CacheStats = this.cache.stats()
+
+    private fun logStats() {
+        logger.debug("Cache stats: {}", this.stats())
+    }
+
+    class Builder<K, V>
+            where K : Any,
+                  V : Any {
+        var spec: String = "maximumSize=10000, expireAfterWrite=10m"
+        var expire: (k: K?, v: V?, c: RemovalCause) -> Unit = { _, _, _ -> }
+        var logger: Logger = LoggerFactory.getLogger(KSimpleCache::class.java.simpleName)
+
+        fun build(): KSimpleCache<K, V> = KSimpleCache(this)
+    }
 }
