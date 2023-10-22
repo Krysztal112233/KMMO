@@ -26,4 +26,5 @@ persistence:
     memory:
       file: "storage.json"
   cache:
+    stats: true
     command: "maximumSize=10000, expireAfterWrite=10m"

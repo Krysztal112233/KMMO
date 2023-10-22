@@ -25,19 +25,31 @@ package dev.krysztal.kmmo.core.foundation
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalCause
-import com.github.benmanes.caffeine.cache.stats.CacheStats
+import dev.krysztal.kmmo.core.foundation.identifier.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+/**
+ * @author Krysztal112233
+ */
 class KSimpleCache<K, V> private constructor(builder: Builder<K, V>)
         where K : Any,
               V : Any {
 
+    private val identifier: Identifier? = builder.identifier
     private val logger: Logger = builder.logger
     private val cache: Cache<K, V> = Caffeine
         .from(builder.spec)
-        .removalListener<K, V> { k, v, c -> builder.expire(k, v, c) }
+        .removalListener<K, V> { k, v, c -> builder.removeListener(k, v, c) }
         .build()
+
+    private val statsLogger: () -> Unit = run {
+        if (builder.enableStats) {
+            { logger.debug("Cache \"{}\" stats: {}", this.identifier, this.cache.stats()) }
+        } else {
+            {}
+        }
+    }
 
     fun put(k: K, v: V) {
         this.cache.put(k, v)
@@ -50,18 +62,16 @@ class KSimpleCache<K, V> private constructor(builder: Builder<K, V>)
         return v
     }
 
-    private fun stats(): CacheStats = this.cache.stats()
-
-    private fun logStats() {
-        logger.debug("Cache stats: {}", this.stats())
-    }
+    private fun logStats() = this.statsLogger()
 
     class Builder<K, V>
             where K : Any,
                   V : Any {
         var spec: String = "maximumSize=10000, expireAfterWrite=10m"
-        var expire: (k: K?, v: V?, c: RemovalCause) -> Unit = { _, _, _ -> }
+        var removeListener: (k: K?, v: V?, c: RemovalCause) -> Unit = { _, _, _ -> }
         var logger: Logger = LoggerFactory.getLogger(KSimpleCache::class.java.simpleName)
+        var identifier: Identifier? = null
+        var enableStats: Boolean = true
 
         fun build(): KSimpleCache<K, V> = KSimpleCache(this)
     }
