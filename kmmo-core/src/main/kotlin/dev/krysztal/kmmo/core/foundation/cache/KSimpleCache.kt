@@ -45,9 +45,9 @@ class KSimpleCache<K, V> private constructor(builder: Builder<K, V>) : Identifie
         .also { if (builder.recordStatsCounter != null) it.recordStats { builder.recordStatsCounter } }
         .build()
 
-    fun put(k: K, v: V) = this.cache.put(k, v)
+    fun set(key: K, value: V) = this.cache.put(key, value)
 
-    fun get(k: K): V? = cache.getIfPresent(k)
+    fun get(key: K): V? = cache.getIfPresent(key)
 
     fun expelAll() = this.cache.cleanUp()
 
@@ -62,3 +62,13 @@ class KSimpleCache<K, V> private constructor(builder: Builder<K, V>) : Identifie
         fun build(): KSimpleCache<K, V> = KSimpleCache(this)
     }
 }
+
+public operator fun <K, V> KSimpleCache<K, V>.set(key: K, value: V)
+        where K : Any,
+              V : Any? = this.set(key, value)
+
+
+public operator fun <K, V> KSimpleCache<K, V>.get(key: K)
+        where K : Any,
+              V : Any? = this.get(key)
+
