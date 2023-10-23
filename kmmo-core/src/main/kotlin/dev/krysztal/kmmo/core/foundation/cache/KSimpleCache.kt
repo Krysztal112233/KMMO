@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package dev.krysztal.kmmo.core.foundation
+package dev.krysztal.kmmo.core.foundation.cache
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -35,7 +35,7 @@ import java.util.UUID
  */
 class KSimpleCache<K, V> private constructor(builder: Builder<K, V>) : IdentifiedMark
         where K : Any,
-              V : Any {
+              V : Any? {
 
     override val id: Identifier =
         builder.identifier ?: Identifier("KMMO", "anonymousCache/${UUID.randomUUID()}")
@@ -49,9 +49,11 @@ class KSimpleCache<K, V> private constructor(builder: Builder<K, V>) : Identifie
 
     fun get(k: K): V? = cache.getIfPresent(k)
 
+    fun expelAll() = this.cache.cleanUp()
+
     class Builder<K, V>
             where K : Any,
-                  V : Any {
+                  V : Any? {
         var spec: String = "maximumSize=10000, expireAfterWrite=10m"
         var removeListener: (k: K?, v: V?, c: RemovalCause) -> Unit = { _, _, _ -> }
         var identifier: Identifier? = null
