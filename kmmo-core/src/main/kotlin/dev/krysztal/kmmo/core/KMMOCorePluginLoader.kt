@@ -31,29 +31,18 @@ import org.eclipse.aether.repository.RemoteRepository
 class KMMOCorePluginLoader() : PluginLoader {
     override fun classloader(classpathBuilder: PluginClasspathBuilder) {
         val mvnRepository = with(MavenLibraryResolver()) {
-            addRepository(
-                RemoteRepository.Builder(
-                    "JitPack",
-                    "default",
-                    "https://jitpack.io",
-                ).build()
-            )
-
-            addRepository(
-                RemoteRepository.Builder(
-                    "Ali Maven Repository",
-                    "default",
-                    "https://maven.aliyun.com/nexus/content/groups/public/",
-                ).build()
-            )
-
-            addRepository(
-                RemoteRepository.Builder(
+            listOf(
+                Triple("JitPack", "default", "https://jitpack.io"),
+                Triple("Ali Maven Repository", "default", "https://maven.aliyun.com/nexus/content/groups/public/"),
+                Triple(
                     "Tencent Maven Repository",
                     "default",
                     "https://mirrors.cloud.tencent.com/nexus/repository/maven-public/",
-                ).build()
+                ),
             )
+                .map { RemoteRepository.Builder(it.first, it.second, it.third).build() }
+                .forEach(this::addRepository)
+
             this
         }
         classpathBuilder.addLibrary(mvnRepository)
