@@ -25,53 +25,37 @@ package dev.krysztal.kmmo.core.foundation
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalCause
+import com.github.benmanes.caffeine.cache.stats.StatsCounter
+import dev.krysztal.kmmo.core.foundation.identifier.IdentifiedMark
 import dev.krysztal.kmmo.core.foundation.identifier.Identifier
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.util.UUID
 
 /**
  * @author Krysztal112233
  */
-class KSimpleCache<K, V> private constructor(builder: Builder<K, V>)
+class KSimpleCache<K, V> private constructor(builder: Builder<K, V>) : IdentifiedMark
         where K : Any,
               V : Any {
 
-    private val identifier: Identifier? = builder.identifier
-    private val logger: Logger = builder.logger
+    override val id: Identifier =
+        builder.identifier ?: Identifier("KMMO", "anonymousCache/${UUID.randomUUID()}")
     private val cache: Cache<K, V> = Caffeine
         .from(builder.spec)
         .removalListener<K, V> { k, v, c -> builder.removeListener(k, v, c) }
+        .also { if (builder.recordStatsCounter != null) it.recordStats { builder.recordStatsCounter } }
         .build()
 
-    private val statsLogger: () -> Unit = run {
-        if (builder.enableStats) {
-            { logger.debug("Cache \"{}\" stats: {}", this.identifier, this.cache.stats()) }
-        } else {
-            {}
-        }
-    }
+    fun put(k: K, v: V) = this.cache.put(k, v)
 
-    fun put(k: K, v: V) {
-        this.cache.put(k, v)
-        this.logStats()
-    }
-
-    fun get(k: K): V? {
-        val v = this.cache.getIfPresent(k)
-        this.logStats()
-        return v
-    }
-
-    private fun logStats() = this.statsLogger()
+    fun get(k: K): V? = cache.getIfPresent(k)
 
     class Builder<K, V>
             where K : Any,
                   V : Any {
         var spec: String = "maximumSize=10000, expireAfterWrite=10m"
         var removeListener: (k: K?, v: V?, c: RemovalCause) -> Unit = { _, _, _ -> }
-        var logger: Logger = LoggerFactory.getLogger(KSimpleCache::class.java.simpleName)
         var identifier: Identifier? = null
-        var enableStats: Boolean = true
+        var recordStatsCounter: StatsCounter? = null
 
         fun build(): KSimpleCache<K, V> = KSimpleCache(this)
     }
