@@ -32,14 +32,14 @@ import org.bukkit.scheduler.BukkitTask
 /**
  * @author Krysztal112233
  */
-class EntityCompatibleScheduler(
-    private var entity: Entity,
-    private var plugin: JavaPlugin = pluginInstance!!,
-    private var task: (Entity) -> Unit = { Unit },
-    private var retire: (Entity) -> Unit = { Unit },
-    private var delay: Long = 0,
-    private var period: Long = 0,
-) {
+class EntityCompatibleScheduler private constructor(builder: Builder) {
+    private var entity: Entity = builder.entity
+    private var plugin: JavaPlugin = pluginInstance!!
+    private var task: (Entity) -> Unit = { Unit }
+    private var retire: (Entity) -> Unit = { Unit }
+    private var delay: Long = 0
+    private var period: Long = 0
+
     fun register() {
         if (runningFolia()) this.foliaEntityScheduler()
         else this.spigotGlobalScheduler()
@@ -65,5 +65,15 @@ class EntityCompatibleScheduler(
         }
 
         Bukkit.getScheduler().runTaskTimer(plugin, f, delay, period)
+    }
+
+    class Builder(val entity: Entity) {
+        var plugin: JavaPlugin = pluginInstance!!
+        var task: (Entity) -> Unit = { Unit }
+        var retire: (Entity) -> Unit = { Unit }
+        var delay: Long = 0
+        var period: Long = 0
+
+        fun build(): EntityCompatibleScheduler = EntityCompatibleScheduler(this)
     }
 }
