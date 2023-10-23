@@ -22,6 +22,8 @@
 
 package dev.krysztal.kmmo.core
 
+import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter
+import dev.krysztal.kmmo.core.foundation.cache.KSimpleCache
 import dev.krysztal.kmmo.core.foundation.compatible.runningFolia
 import dev.krysztal.kmmo.core.persistence.InMemoryProvider
 import dev.krysztal.kmmo.core.persistence.RedisProvider
@@ -53,27 +55,37 @@ class KMMOCoreMain() : JavaPlugin() {
     }
 
     override fun onDisable() {
+        persistenceProvider?.close()
     }
 
     private suspend fun persistenceProviderSelect() {
-        when (KMMOConfig.persistenceType) {
-            PersistenceProviderType.Redis -> {
-                RedisProvider.init(
-                    mapOf(
-                        "endpoint" to this.config.getString("persistence.configuration.redis.endpoint")!!,
-                    )
-                )
-                persistenceProvider = RedisProvider
+        val cache = {
+            KSimpleCache.Builder<String, Any>().also {
+                it.removeListener = { k, v, _ -> runBlocking { persistenceProvider?.putJson(k!!, gson.toJson(v!!)) } }
+                it.recordStatsCounter = ConcurrentStatsCounter()
             }
+        }
 
-            PersistenceProviderType.InMemory -> {
-                InMemoryProvider.init(
-                    mapOf(
-                        "file" to this.config.getString("persistence.configuration.memory.file")!!,
-                    )
-                )
-                persistenceProvider = InMemoryProvider
-            }
+        val redisBuilder = suspend {
+            RedisProvider(
+                mapOf(
+                    "endpoint" to this.config.getString("persistence.configuration.redis.endpoint")!!,
+                ), cache
+            )
+        }
+
+        val inMemoryBuilder = suspend {
+            InMemoryProvider(
+                mapOf(
+                    "file" to this.config.getString("persistence.configuration.memory.file")!!,
+                ),
+                cache,
+            )
+        }
+
+        persistenceProvider = when (KMMOConfig.persistenceType) {
+            PersistenceProviderType.Redis -> redisBuilder()
+            PersistenceProviderType.InMemory -> inMemoryBuilder()
         }
     }
 

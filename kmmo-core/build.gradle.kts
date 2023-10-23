@@ -62,6 +62,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
     implementation("com.github.ben-manes.caffeine:caffeine:${caffeine}")
+    testImplementation("com.github.ben-manes.caffeine:caffeine:${caffeine}")
 
     // https://mvnrepository.com/artifact/org.apache.groovy/groovy
     compileOnly("org.apache.groovy:groovy:${groovy}")
@@ -78,6 +79,7 @@ tasks.processResources {
                 "kryo" to kryo,
                 "groovy" to groovy,
                 "guava" to guava,
+                "caffeine" to caffeine,
             )
         )
     }

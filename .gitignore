@@ -15,3 +15,6 @@ server/
 
 # Ignore IDEA directory
 .idea/
+
+# Ignore all log directory
+**/logs

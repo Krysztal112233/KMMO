@@ -22,7 +22,13 @@
 
 package dev.krysztal.kmmo.core.foundation.persistence
 
+import com.google.gson.reflect.TypeToken
+import dev.krysztal.kmmo.core.foundation.cache.KSimpleCache
+import dev.krysztal.kmmo.core.foundation.extender.typeToken
 import dev.krysztal.kmmo.core.gson
+import dev.krysztal.kmmo.core.pluginScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * In the development, we will find that many times we need to persist some data ,
@@ -31,25 +37,53 @@ import dev.krysztal.kmmo.core.gson
  *
  * @author Krysztal112233
  */
-interface PersistenceProvider {
-    suspend fun getJson(key: String): String?
+abstract class PersistenceProvider {
+    internal abstract val cache: KSimpleCache<String, *>
 
-    suspend fun <T> put(key: String, data: T) {
-        this.putJson(key, gson.toJson(data))
+    /**
+     * To improve performance, the implementation of [PersistenceProvider]
+     * should use [KSimpleCache] to accelerate **reading**.
+     *
+     * @see KSimpleCache
+     */
+    open suspend fun <T> get(key: String, typeToken: TypeToken<T>): T? {
+        return gson.fromJson(this.getJson(key) ?: return null, typeToken)
     }
 
-    suspend fun putJson(key: String, json: String)
+    /**
+     * Don't invoke this method directly, it's slow and huge.
+     *
+     * It's the basis **reading** implementation of [PersistenceProvider]
+     */
+    abstract suspend fun getJson(key: String): String?
 
-    suspend fun init(configuration: Map<String, String>)
+    /**
+     * To improve performance, the implementation of [PersistenceProvider]
+     * should use [KSimpleCache] to accelerate **writing**.
+     *
+     * @see KSimpleCache
+     */
+    open suspend fun <T> put(key: String, data: T) where  T : Any = this.putJson(key, gson.toJson(data))
 
-    fun close() {}
+    /**
+     * Don't invoke this method directly, it's slow and huge.
+     *
+     * It's the basis **writing** implementation of [PersistenceProvider]
+     */
+    abstract suspend fun putJson(key: String, json: String)
 
-    fun sync() {}
+    abstract fun close()
+
+    /**
+     * Sync all in-memory data (in cache or hashmap) into external persistence storage.
+     */
+    abstract fun sync()
 }
 
-/**
- * @author Krysztal112233
- */
-suspend inline fun <reified T> PersistenceProvider.get(key: String): T? {
-    return gson.fromJson(getJson(key) ?: return null, T::class.java)
-}
+public operator fun <T> PersistenceProvider.set(key: String, value: T)
+        where T : Any = runBlocking { this@set.put(key, value) }
+
+public inline operator fun <reified T> PersistenceProvider.get(key: String) where T : Any? =
+    runBlocking { this@get.get(key, T::class.java.typeToken()) }
+
+
