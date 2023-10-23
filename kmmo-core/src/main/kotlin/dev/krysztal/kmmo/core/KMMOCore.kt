@@ -25,6 +25,8 @@ package dev.krysztal.kmmo.core
 
 import com.google.gson.Gson
 import dev.krysztal.kmmo.core.foundation.persistence.PersistenceProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.plugin.java.JavaPlugin
 
 @JvmField
@@ -35,3 +37,6 @@ var pluginInstance: JavaPlugin? = null
 
 @JvmField
 var gson: Gson = Gson()
+
+@JvmField
+val pluginScope = CoroutineScope(Dispatchers.Default)
